@@ -34,27 +34,36 @@ past-life-persona/
 
 ## 第一步：部署到 GitHub Pages
 
+> **当前状态：代码已经在本地 `git init` 并提交完毕（分支 `main`，远端已指向
+> `github.com/garfieldjf/past-life-persona.git`），只差推送。**
+> 目标地址：**https://garfieldjf.github.io/past-life-persona/**
+
 ### 1. 建仓库
 
-在 GitHub 上新建一个仓库，建议 **Public**（私有仓库用 Pages 需要付费版）。
-名字随意，比如 `past-life-persona`。
+去 https://github.com/new 建一个仓库：
 
-> 仓库名会影响你的网址：用户名为 `yourname`、仓库名为 `past-life-persona`，
-> 那么网址是 `https://yourname.github.io/past-life-persona/`。
-> 如果仓库名取成 `yourname.github.io`，网址就是 `https://yourname.github.io/` 根路径。
+| 字段 | 填什么 |
+|---|---|
+| Repository name | `past-life-persona` |
+| 可见性 | **Public**（免费版 Pages 不支持私有仓库） |
+| Initialize this repository | **三个都不要勾**（README / .gitignore / License 全不勾） |
+
+> 名字要和上面一致，否则网址会变，`index.html` 与 `config.js` 里写好的地址就失效了。
+> 真要改名字，见后面「换了仓库名要同步这四处」。
 
 ### 2. 推代码
 
-在 `past-life-persona/` 目录下执行（把地址换成你自己的仓库）：
+仓库已提交好，**只需要接远程再推**：
 
 ```bash
-git init
-git add .
-git commit -m "初次提交：前世身份档案"
+cd past-life-persona
+git remote add origin https://github.com/garfieldjf/past-life-persona.git
 git branch -M main
-git remote add origin https://github.com/你的用户名/你的仓库名.git
 git push -u origin main
 ```
+
+提示要密码时，**不要输账号密码**（GitHub 早已禁用密码推送），输 Personal Access Token。
+生成方式见下方「推不上去怎么办」。
 
 ### 3. 等 1 分钟
 
@@ -65,7 +74,7 @@ git push -u origin main
 不需要手动进 Settings 点选。如果因为权限原因没有自动开启，手动做一次即可：
 **Settings → Pages → Build and deployment → Source 选 "GitHub Actions"**。
 
-网址在 **Settings → Pages** 顶部，形如 `https://yourname.github.io/past-life-persona/`。
+网址在 **Settings → Pages** 顶部：**https://garfieldjf.github.io/past-life-persona/**
 
 到这一步，**网站已经可以随时随地访问了**，只是还没有全局统计。
 
