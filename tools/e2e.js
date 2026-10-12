@@ -5,11 +5,13 @@
  *     npm install          # 只装 jsdom，一次性
  *     npm test
  *
- * 它做两件纯语法检查做不到的事：
+ * 它做三件纯语法检查做不到的事：
  *   1. 在真实 DOM 里把 21 道题从头点一遍，抓运行时错误
  *      （这类错误 node --check 是发现不了的）
  *   2. 起一个模拟 PostgREST 的服务，把 Supabase 那条链路
  *      （短链接 / 统计 / 反馈 / 写入被拒后的降级）也跑通
+ *   3. 校验分享链接的站点地址：填了 SITE_URL 时以配置为准，
+ *      留空时从实际地址推导且不残留 index.html
  *
  * 它自带静态文件服务，不需要额外开 python -m http.server。
  * 部署用的文件里不含本脚本，不会影响线上。
@@ -23,6 +25,8 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 const ROOT = path.join(__dirname, '..');
 const PORT_PLAIN = 8099;
 const PORT_CLOUD = 8098;
+const PORT_FIXED = 8097;
+const FIXED_ORIGIN = 'https://garfieldjf.github.io/past-life-persona/';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 let fails = 0;
@@ -40,7 +44,7 @@ const MIME = {
 };
 
 /* ---------------- 站点服务（可选叠加模拟 Supabase） ---------------- */
-function makeServer(port, cloud) {
+function makeServer(port, cloud, siteUrl) {
   const db = { personas: [], feedback: [] };
   const log = [];
   let rateLimitOn = false;
@@ -114,10 +118,14 @@ function makeServer(port, cloud) {
     if (p === '/') p = '/index.html';
     if (p === '/config.js') {
       res.writeHead(200, { 'Content-Type': MIME['.js'] });
-      return res.end(cloud
-        ? 'window.APP_CONFIG = { SUPABASE_URL: "http://127.0.0.1:' + PORT_CLOUD +
-          '", SUPABASE_ANON_KEY: "mock-anon-key", SITE_NAME: "前世身份档案", SHOW_STATS: true };'
-        : 'window.APP_CONFIG = { SUPABASE_URL: "", SUPABASE_ANON_KEY: "", SITE_NAME: "前世身份档案", SHOW_STATS: true };');
+      const cfg = {
+        SUPABASE_URL: cloud ? 'http://127.0.0.1:' + PORT_CLOUD : '',
+        SUPABASE_ANON_KEY: cloud ? 'mock-anon-key' : '',
+        SITE_NAME: '前世身份档案',
+        SITE_URL: siteUrl || '',
+        SHOW_STATS: true
+      };
+      return res.end('window.APP_CONFIG = ' + JSON.stringify(cfg) + ';');
     }
     const file = path.resolve(path.join(ROOT, p));
     if (!file.startsWith(path.resolve(ROOT))) { res.writeHead(403); return res.end(); }
@@ -131,7 +139,7 @@ function makeServer(port, cloud) {
 }
 
 /* ---------------- 打开页面 ---------------- */
-async function open(port) {
+async function open(port, pathName) {
   const errors = [];
   const vc = new VirtualConsole();
   vc.on('jsdomError', e => { if (!/not implemented/i.test(e.message || '')) errors.push(e.message); });
@@ -172,7 +180,8 @@ async function runQuiz(o) {
 (async function () {
   const sPlain = await makeServer(PORT_PLAIN, false);
   const sCloud = await makeServer(PORT_CLOUD, true);
-  const cleanup = () => { sPlain.close(); sCloud.close(); };
+  const sFixed = await makeServer(PORT_FIXED, false, FIXED_ORIGIN);
+  const cleanup = () => { sPlain.close(); sCloud.close(); sFixed.close(); };
 
   try {
     /* ========== 本地模式 ========== */
@@ -193,6 +202,9 @@ async function runQuiz(o) {
     ['你的五维画像', '你的高光与代价', '灵魂副调', '发出去的文案，可以直接复制']
       .forEach(s => o.$$('.sect h3').map(e => e.textContent).indexOf(s) >= 0 ? ok('区块：' + s) : bad('缺区块：' + s));
     o.$('#shareText') && o.$('#shareText').textContent.includes('我测出来是') ? ok('分享文案已生成') : bad('分享文案缺失');
+    const su = o.$('#shareUrl') && o.$('#shareUrl').textContent;
+    su && su.indexOf('http://127.0.0.1:' + PORT_PLAIN + '/') === 0
+      ? ok('分享链接按实际地址生成：' + su.slice(0, 44) + '…') : bad('分享链接前缀异常：' + su);
 
     /^#\/d\//.test(o.w.location.hash) ? ok('地址栏：' + decodeURIComponent(o.w.location.hash)) : bad('地址栏异常：' + o.w.location.hash);
     let last = null; try { last = JSON.parse(o.w.localStorage.getItem('plp.last')); } catch (e) {}
@@ -208,6 +220,28 @@ async function runQuiz(o) {
     o.$('.statgrid') ? ok('统计页渲染（本机 ' + o.$('.statgrid b').textContent + ' 份）') : bad('统计页未渲染');
     o.errors.length ? o.errors.forEach(e => bad('JS 错误：' + e)) : ok('零 JS 报错');
     o.dom.window.close();
+
+    /* ========== 分享链接的站点地址 ========== */
+    console.log('\n【分享地址】不同入口下分享链接都要指向正确的公网地址');
+
+    // 情形一：config.js 里显式填了 SITE_URL —— 以配置为准
+    const x = await open(PORT_FIXED);
+    await runQuiz(x);
+    const xs = x.$('#shareUrl') && x.$('#shareUrl').textContent;
+    xs && xs.indexOf(FIXED_ORIGIN) === 0
+      ? ok('采用配置的 SITE_URL：' + xs.slice(0, 56) + '…') : bad('未采用 SITE_URL：' + xs);
+    x.errors.length ? x.errors.forEach(e => bad('JS 错误：' + e)) : ok('零 JS 报错');
+    x.dom.window.close();
+
+    // 情形二：SITE_URL 留空、且用户是从 /index.html 进来的 —— 不能把 index.html 带进分享链接
+    const oi = await open(PORT_PLAIN, '/index.html');
+    await runQuiz(oi);
+    const ois = oi.$('#shareUrl') && oi.$('#shareUrl').textContent;
+    ois && ois.indexOf('http://127.0.0.1:' + PORT_PLAIN + '/#/') === 0
+      ? ok('从 /index.html 进入时自动归一为站点根：' + ois.slice(0, 44) + '…')
+      : bad('分享链接残留 index.html：' + ois);
+    oi.errors.length ? oi.errors.forEach(e => bad('JS 错误：' + e)) : ok('零 JS 报错');
+    oi.dom.window.close();
 
     /* ========== 后端模式 ========== */
     console.log('\n【后端模式】接入 Supabase 后的完整流程');

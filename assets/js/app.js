@@ -254,8 +254,18 @@
     return (opt.self ? topbar() : topbar('home')) + '<div class="sheet">' + h.join('') + '</div>';
   }
 
+  // 分享链接的站点前缀。
+  // 默认从当前地址推导（GitHub Pages 上永远正确，换仓库名也不用改）；
+  // 如果 config.js 里显式填了 SITE_URL，则以它为准——用于绑了自定义域名、
+  // 或站点同时挂在多个入口下的情况。
+  function sitePrefix() {
+    const fixed = String((window.APP_CONFIG && window.APP_CONFIG.SITE_URL) || '').trim();
+    if (/^https?:\/\//i.test(fixed)) return fixed.replace(/\/+$/, '') + '/';
+    return location.origin + location.pathname.replace(/index\.html?$/i, '');
+  }
+
   function shareUrl(res) {
-    const origin = location.origin + location.pathname;
+    const origin = sitePrefix();
     return res.short ? origin + '#/r/' + res.short : origin + '#/d/' + E.encodePayload(res);
   }
 

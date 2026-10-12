@@ -290,9 +290,28 @@ select date_trunc('day', created_at) as d, count(*)
 
 **想绑自己的域名**
 仓库 **Settings → Pages → Custom domain** 填域名，
-然后在你的 DNS 服务商加一条 CNAME 指向 `你的用户名.github.io`。
+然后在你的 DNS 服务商加一条 CNAME 指向 `garfieldjf.github.io`。
 HTTPS 会在证书签发后自动生效（一般几分钟到半小时）。
 绑了自定义域名后，**分享链接会自动跟着变成新域名**，不需要改代码。
+
+**换了仓库名或绑了自定义域名，要同步这四处**
+
+| 位置 | 改什么 |
+|---|---|
+| `index.html` | `<link rel="canonical">` 与 `<meta property="og:url">` 里的网址 |
+| `config.js` | `SITE_URL`（可以留空——留空会自动跟随实际访问地址，最省事） |
+| git 远端 | `git remote set-url origin https://github.com/garfieldjf/新仓库名.git` |
+| `README.md` | 本文档里出现的网址 |
+
+**推不上去怎么办**
+GitHub 不接受账号密码推送，必须用 Personal Access Token：
+
+1. https://github.com/settings/tokens?type=beta → **Generate new token (fine-grained)**
+2. **Repository access** → Only select repositories → 只勾 `past-life-persona`
+3. **Permissions** → `Contents` = Read and write，`Workflows` = Read and write
+   （`Workflows` 少了会因为仓库里有 `.github/workflows/` 被拒收）
+4. **Expiration** 选 7 天即可，用完立刻撤销
+5. 推送时密码处粘贴这个 token
 
 **结果分布太集中，某个原型老是出现**
 看上面「什么时候需要动原型坐标」那一节。
