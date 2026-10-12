@@ -1,0 +1,13 @@
+{
+  "name": "past-life-persona",
+  "version": "1.0.0",
+  "private": true,
+  "description": "你的前世身份档案 —— 纯静态性格测评站点（GitHub Pages + Supabase）",
+  "scripts": {
+    "test": "node tools/e2e.js",
+    "dist": "node tools/distribution.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

@@ -1,0 +1,26 @@
+# 统一换行符：仓库里一律存 LF。
+# 这样在 Windows 上编辑、在 GitHub Actions（Linux）上构建，行为完全一致，
+# 避免 .yml / .js 里混入 CRLF 导致工作流或脚本执行失败。
+* text=auto eol=lf
+
+# 明确按文本处理
+*.html   text eol=lf
+*.css    text eol=lf
+*.js     text eol=lf
+*.json   text eol=lf
+*.yml    text eol=lf
+*.md     text eol=lf
+*.sql    text eol=lf
+*.webmanifest text eol=lf
+
+# 二进制，别碰
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.woff   binary
+*.woff2  binary
+
+# 发布产物不参与 diff 统计
+_site/** linguist-generated=true
