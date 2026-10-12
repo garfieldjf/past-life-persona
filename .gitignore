@@ -1,0 +1,19 @@
+# 构建产物（Actions 里临时生成）
+_site/
+dist/
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# 依赖（这个项目没有构建步骤，用不到，防止误提交）
+node_modules/
+
+# 本地环境变量（如果你把密钥写在别处，别提交）
+.env
+.env.local

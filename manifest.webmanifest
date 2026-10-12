@@ -1,0 +1,20 @@
+{
+  "name": "你的前世身份档案",
+  "short_name": "前世档案",
+  "description": "五维性格匹配，测出与你最接近的历史人物原型。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F6F3",
+  "theme_color": "#F7F6F3",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%238C3A2E'/%3E%3Ctext x='256' y='336' font-size='240' text-anchor='middle' fill='%23fff' font-family='serif'%3E%E5%89%8D%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

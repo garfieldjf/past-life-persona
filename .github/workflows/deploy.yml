@@ -1,0 +1,56 @@
+name: 部署到 GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只跑一个部署；排队中的会被取消，正在跑的不打断
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取出代码
+        uses: actions/checkout@v4
+
+      # enablement: true 会自动把仓库的 Pages 打开并设为「GitHub Actions」来源，
+      # 不需要你再去 Settings 里手动点一次。
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # 只把要对外发布的文件放进 _site，源码和数据库脚本不发布
+      - name: 组装站点文件
+        run: |
+          mkdir -p _site
+          cp index.html 404.html manifest.webmanifest config.js _site/
+          cp -r assets _site/
+          touch _site/.nojekyll
+          echo "--- 将要发布的文件 ---"
+          find _site -type f | sort
+
+      - name: 上传产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 发布
+        id: deployment
+        uses: actions/deploy-pages@v4
