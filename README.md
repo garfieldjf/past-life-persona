@@ -34,26 +34,30 @@ past-life-persona/
 
 ## 第一步：部署到 GitHub Pages
 
-> **当前状态：代码已经在本地 `git init` 并提交完毕（分支 `main`，远端已指向
-> `github.com/garfieldjf/past-life-persona.git`），只差推送。**
+> **当前状态：代码已经推送到 `github.com/garfieldjf/past-life-persona`
+> （4 个提交，分支 `main`），远端 18 个文件与本地逐字节一致。只差开启 Pages。**
 > 目标地址：**https://garfieldjf.github.io/past-life-persona/**
 
-### 1. 建仓库
+### 1. 先手动开启 Pages（**首次必做**）
 
-去 https://github.com/new 建一个仓库：
+工作流自带的 `GITHUB_TOKEN` **没有创建 Pages 站点的权限**，
+所以 `enablement: true` 在「从未开启过 Pages」的仓库上会失败：
 
-| 字段 | 填什么 |
-|---|---|
-| Repository name | `past-life-persona` |
-| 可见性 | **Public**（免费版 Pages 不支持私有仓库） |
-| Initialize this repository | **三个都不要勾**（README / .gitignore / License 全不勾） |
+```
+##[error]Create Pages site failed. Error: Resource not accessible by integration
+```
 
-> 名字要和上面一致，否则网址会变，`index.html` 与 `config.js` 里写好的地址就失效了。
-> 真要改名字，见后面「换了仓库名要同步这四处」。
+这是 GitHub 的限制，不是配置写错了。首次开一次即可：
 
-### 2. 推代码
+1. 打开 **Settings → Pages**：https://github.com/garfieldjf/past-life-persona/settings/pages
+2. **Build and deployment → Source** 选 **`GitHub Actions`**
+3. 顺手建议改一项：**Settings → Actions → General** →
+   **Workflow permissions** 选 **Read and write permissions** → 保存
+   （避免 `GITHUB_TOKEN` 拿不到 `pages: write`，在 `deploy-pages` 那步再失败一次）
 
-仓库已提交好，**只需要接远程再推**：
+**开启过一次之后，以后每次推送都会自动发布，不用再管这一步。**
+
+### 2. 推代码（已完成，留作参考）
 
 ```bash
 cd past-life-persona
@@ -68,11 +72,10 @@ git push -u origin main
 ### 3. 等 1 分钟
 
 推送后 GitHub 会自动跑 `.github/workflows/deploy.yml`。
-去仓库的 **Actions** 标签页能看到进度，绿色的勾出现就说明发布成功。
+去仓库的 **Actions** 标签页看进度：绿色勾 = 发布成功。
 
-工作流里带了 `enablement: true`，会**自动把 Pages 打开**并设为「GitHub Actions」来源，
-不需要手动进 Settings 点选。如果因为权限原因没有自动开启，手动做一次即可：
-**Settings → Pages → Build and deployment → Source 选 "GitHub Actions"**。
+**如果在第 1 步之前就推过、并且工作流已经红过一次**，开完 Pages 之后回到那条失败的运行，
+点右上角 **Re-run all jobs** 即可，不用再改代码。
 
 网址在 **Settings → Pages** 顶部：**https://garfieldjf.github.io/past-life-persona/**
 
